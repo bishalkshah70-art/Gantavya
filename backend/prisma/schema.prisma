@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OtpChannel {
+  EMAIL
+  PHONE
+}
+
+enum OtpPurpose {
+  SIGNUP
+  LOGIN
+  PASSWORD_RESET
+}
+
+model User {
+  id            String         @id @default(uuid()) @db.Uuid
+  fullName      String         @map("full_name") @db.VarChar(120)
+  email         String         @unique @db.VarChar(255)
+  phoneNumber   String?        @unique @map("phone_number") @db.VarChar(20)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  role          UserRole       @default(USER)
+  isVerified    Boolean        @default(false) @map("is_verified")
+  emailVerified Boolean        @default(false) @map("email_verified")
+  phoneVerified Boolean        @default(false) @map("phone_verified")
+  refreshTokens RefreshToken[]
+  otpCodes      OtpCode[]
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  tokenHash String   @unique @map("token_hash") @db.VarChar(255)
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model OtpCode {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String?    @map("user_id") @db.Uuid
+  user        User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  destination String     @db.VarChar(255)
+  codeHash    String     @map("code_hash") @db.VarChar(255)
+  channel     OtpChannel
+  purpose     OtpPurpose
+  attempts    Int        @default(0)
+  expiresAt   DateTime   @map("expires_at")
+  consumedAt  DateTime?  @map("consumed_at")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  @@index([destination, purpose, channel])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("otp_codes")
+}
