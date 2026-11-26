@@ -81,18 +81,3 @@ docker compose down -v          # WARNING: deletes the local database volume
 | POST | `/api/auth/logout` | Revoke refresh token and clear cookies |
 | GET | `/api/auth/me` | Current authenticated user |
 
-All browser requests use `credentials: "include"`.
-
-## Important production checklist
-
-This is an MVP starter, not a production deployment configuration. Before deployment:
-1. Set strong, unique `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET` values (at least 32 random bytes each).
-2. Use managed PostgreSQL or secure your database; never expose its port publicly.
-3. Set `NODE_ENV=production`, `COOKIE_SECURE=true`, and serve frontend/backend over HTTPS.
-4. Set exact production origins in `CORS_ORIGIN`; do not use wildcard CORS with credentials.
-5. Add email verification, password reset, rate limiting, login throttling, monitoring and backups.
-6. Consider CSRF protection when deploying cookie-authenticated endpoints. Keep frontend and API on same-site domains where possible.
-7. Do not commit `.env`, `.env.local`, or secrets.
-8. Add authorization checks for admin-only routes; never trust a role supplied by the client.
-
-The refresh token is stored hashed in PostgreSQL and rotated when refreshed. Access tokens are short-lived. Passwords are hashed with bcrypt.
